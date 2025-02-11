@@ -38,15 +38,15 @@ python3 infer.py
 ```
 这里测试只对比要求的三个示例图片，首先是ST_CGAN模型的预测结果（从左到右分别是原图，预测阴影，去除阴影图）：
 
-![alt text](test_result0/grid_img1.jpg)
-![alt text](test_result0/grid_img2.jpg)
-![alt text](test_result0/grid_img3.jpg)
+![alt text](test_result/test_result0/grid_img1.jpg)
+![alt text](test_result/test_result0/grid_img2.jpg)
+![alt text](test_result/test_result0/grid_img3.jpg)
 
 另外是 ST_CGAN_S的结果：
 
-![alt text](test_result1/grid_img1.jpg)
-![alt text](test_result1/grid_img2.jpg)
-![alt text](test_result1/grid_img3.jpg)
+![alt text](test_result/test_result1/grid_img1.jpg)
+![alt text](test_result/test_result1/grid_img2.jpg)
+![alt text](test_result/test_result1/grid_img3.jpg)
 
 分析：
 
