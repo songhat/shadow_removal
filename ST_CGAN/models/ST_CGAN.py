@@ -2,7 +2,6 @@ import math
 import torch.nn.functional as F
 import torch.nn as nn
 import torch
-from torchsummary import summary
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from thop import profile
 
@@ -65,7 +64,7 @@ class CvTi(nn.Module):
     def __init__(self, in_channels, out_channels, before=None, after=False, kernel_size=4, stride=2,
                  padding=1, dilation=1, groups=1, bias=False):
         super(CvTi, self).__init__()
-        self.conv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding, bias)
+        self.conv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size, stride, padding,bias=bias)
         self.conv.apply(weights_init('gaussian'))
 
         if after=='BN':
@@ -503,14 +502,14 @@ def print_model_summary(model, input):
 
 if __name__ == '__main__':
     #BCHW
-    size = (3, 3, 256, 256)
+    size = (1, 3, 256, 256)
     input = torch.ones(size)
     l1 = nn.L1Loss()
     input.requires_grad = True
 
     #Generator test
     G = Generator()
-    OG = OptimizedGenerator()
+    OG = Generator_S()
     output = G(input)
     OG_output = OG(input)
 
@@ -522,14 +521,33 @@ if __name__ == '__main__':
     print("Optimized Generator:")
     print_model_summary(OG, input)
 
-"""
+    import time
+    # 计算原始 Generator 的吞吐量
+    num_runs = 100
+    start_time = time.time()
+    for _ in range(num_runs):
+        _ = G(input)
+    end_time = time.time()
+    total_time = end_time - start_time
+    throughput_G = num_runs * input.size(0) / total_time
+    print(f"Original Generator Throughput: {throughput_G} samples/second")
+    # 计算优化后的 Generator 的吞吐量
+    start_time = time.time()
+    for _ in range(num_runs):
+        _ = OG(input)
+    end_time = time.time()
+    total_time = end_time - start_time
+    throughput_OG = num_runs * input.size(0) / total_time
+    print(f"Optimized Generator Throughput: {throughput_OG} samples/second")
 
+"""
+Original Generator:
 [INFO] Register count_convNd() for <class 'torch.nn.modules.conv.Conv2d'>.
 [INFO] Register count_normalization() for <class 'torch.nn.modules.batchnorm.BatchNorm2d'>.
 [INFO] Register count_relu() for <class 'torch.nn.modules.activation.LeakyReLU'>.
 [INFO] Register count_convNd() for <class 'torch.nn.modules.conv.ConvTranspose2d'>.
 [INFO] Register zero_ops() for <class 'torch.nn.modules.activation.ReLU'>.
-FLOPs: 53.65 GFLOPs, Parameters: 29.24 M
+FLOPs: 17.88 GFLOPs, Parameters: 29.24 M
 Optimized Generator:
 [INFO] Register count_convNd() for <class 'torch.nn.modules.conv.Conv2d'>.
 [INFO] Register count_normalization() for <class 'torch.nn.modules.batchnorm.BatchNorm2d'>.
@@ -537,6 +555,8 @@ Optimized Generator:
 [INFO] Register count_linear() for <class 'torch.nn.modules.linear.Linear'>.
 [INFO] Register zero_ops() for <class 'torch.nn.modules.dropout.Dropout'>.
 [INFO] Register count_softmax() for <class 'torch.nn.modules.activation.Softmax'>.
-FLOPs: 1.72 GFLOPs, Parameters: 1.47 M
+FLOPs: 0.57 GFLOPs, Parameters: 1.47 M
+Original Generator Throughput: 21.154201336481453 samples/second
+Optimized Generator Throughput: 46.94499651743515 samples/second
 
 """

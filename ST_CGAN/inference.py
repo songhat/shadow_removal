@@ -1,6 +1,5 @@
-from utils.data_loader import ImageTransformOwn
-from models.ST_CGAN import Generator,Generator_S
-from models.vit_seg_modeling import Generator_B
+from .utils.data_loader import ImageTransformOwn
+from .models.ST_CGAN import Generator,Generator_S
 from torchvision.utils import make_grid
 from torchvision.utils import save_image
 from torchvision import transforms
@@ -35,8 +34,8 @@ def unnormalize(x):
     return x
 
 
-def predict_single_image(G1, G2, path, out_path, size):
-    img = Image.open(path).convert('RGB')
+def predict_single_image(G1, G2, img, size):
+    # img = Image.open(path).convert('RGB')
     width, height = img.width, img.height
     mean = (0.5,)
     std = (0.5,)
@@ -73,43 +72,25 @@ def predict_single_image(G1, G2, path, out_path, size):
                                     unnormalize(shadow_removal_image)],
                                    dim=0))
 
-        save_image(grid, out_path + '/grid_' + path.split('/')[-1])
-
         detected_shadow = transforms.ToPILImage(mode='L')(unnormalize(detected_shadow)[0, :, :, :])
         detected_shadow = detected_shadow.resize((width, height), Image.LANCZOS)
-        detected_shadow.save(out_path + '/detected_shadow_' + path.split('/')[-1])
 
         shadow_removal_image = transforms.ToPILImage(mode='RGB')(unnormalize(shadow_removal_image)[0, :, :, :])
         shadow_removal_image = shadow_removal_image.resize((width, height), Image.LANCZOS)
-        shadow_removal_image.save(out_path + '/shadow_removal_image_' + path.split('/')[-1])
 
+    return shadow_removal_image
 
-def main(image_dir, out_path, checkpoint_num, image_size):
-    G1 = Generator_B(input_channels=3, output_channels=1)
-    G2 = Generator_B(input_channels=4, output_channels=3)
+def predict(image, checkpoints, image_size=256):
+    G1 = Generator(input_channels=3, output_channels=1)
+    G2 = Generator(input_channels=4, output_channels=3)
 
-    '''load'''
-    if checkpoint_num is not None:
-        print('load checkpoint ' + checkpoint_num)
+    G1_weights = torch.load(checkpoints[0],weights_only=True)
+    G1.load_state_dict(fix_model_state_dict(G1_weights),strict=False)
 
-        G1_weights = torch.load('./checkpoints/ST-CGAN_G1_' + checkpoint_num + '.pth')
-        G1.load_state_dict(fix_model_state_dict(G1_weights))
-
-        G2_weights = torch.load('./checkpoints/ST-CGAN_G2_' + checkpoint_num + '.pth')
-        G2.load_state_dict(fix_model_state_dict(G2_weights))
+    G2_weights = torch.load(checkpoints[1],weights_only=True)
+    G2.load_state_dict(fix_model_state_dict(G2_weights),strict=False)
 
     # predict_single_image(G1, G2, image_path, out_path, image_size)
 
-    for filename in os.listdir(image_dir):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg')):
-            image_path = os.path.join(image_dir, filename)
-            # 为每张图片生成对应的输出文件名
-            predict_single_image(G1, G2, image_path, out_path, image_size)
-
-
-if __name__ == "__main__":
-    image_dir= './imgs'  # 替换为实际的图像路径
-    out_path = './test_result'
-    checkpoint_num = '100'
-    image_size = 224
-    main(image_dir, out_path, checkpoint_num, image_size)
+    return predict_single_image(G1, G2, image, image_size)
+    

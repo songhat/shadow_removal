@@ -6,6 +6,8 @@ from . import ISTD_transforms
 from PIL import Image
 import random
 from torchvision import transforms
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 

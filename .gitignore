@@ -4,3 +4,7 @@ checkpoints1
 test_result
 dataset
 result
+img2
+ros/build
+ros/devel
+ros/logs
