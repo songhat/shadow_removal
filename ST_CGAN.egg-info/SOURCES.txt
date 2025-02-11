@@ -1,6 +1,0 @@
-README.md
-setup.py
-ST_CGAN.egg-info/PKG-INFO
-ST_CGAN.egg-info/SOURCES.txt
-ST_CGAN.egg-info/dependency_links.txt
-ST_CGAN.egg-info/top_level.txt

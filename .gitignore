@@ -4,7 +4,10 @@ checkpoints1
 test_result
 dataset
 result
-img2
+imgs2
 ros/build
 ros/devel
 ros/logs
+ros/.catkin_tools
+.idea
+ST_CGAN.egg-info
